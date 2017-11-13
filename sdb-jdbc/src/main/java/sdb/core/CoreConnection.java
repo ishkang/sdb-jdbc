@@ -181,40 +181,53 @@ public abstract class CoreConnection {
                     throw new SQLException(String.format("failed to load %s: %s", resourceName, e));
                 }
             }
-            else {
-                File file = new File(fileName).getAbsoluteFile();
-                File parent = file.getParentFile();
-                if (parent != null && !parent.exists()) {
-                    for (File up = parent; up != null && !up.exists();) {
-                        parent = up;
-                        up = up.getParentFile();
-                    }
-                    throw new SQLException("path to '" + fileName + "': '" + parent + "' does not exist");
-                }
+			else if (!fileName.startsWith("//")) {
+				throw new SQLException("host was not specified");
+				/*File file = new File(fileName).getAbsoluteFile();
+				File parent = file.getParentFile();
+				if (parent != null && !parent.exists()) {
+					for (File up = parent; up != null && !up.exists();) {
+						parent = up;
+						up = up.getParentFile();
+					}
+					throw new SQLException("path to '" + fileName + "': '" + parent + "' does not exist");
+				}
 
-                // check write access if file does not exist
-                try {
-                    // The extra check to exists() is necessary as createNewFile()
-                    // does not follow the JavaDoc when used on read-only shares.
-                    if (!file.exists() && file.createNewFile())
-                        file.delete();
-                }
-                catch (Exception e) {
-                    throw new SQLException("opening db: '" + fileName + "': " + e.getMessage());
-                }
-                fileName = file.getAbsolutePath();
-            }
+				// check write access if file does not exist
+				try {
+					// The extra check to exists() is necessary as createNewFile()
+					// does not follow the JavaDoc when used on read-only shares.
+					if (!file.exists() && file.createNewFile())
+						file.delete();
+				} catch (Exception e) {
+					throw new SQLException("opening db: '" + fileName + "': " + e.getMessage());
+				}
+				fileName = file.getAbsolutePath();*/
+			}
         }
 
-        // load the native DB
-        try {
-            db = new RemoteDB();
-        }
-        catch (Exception e) {
-            SQLException err = new SQLException("Error opening connection");
-            err.initCause(e);
-            throw err;
-        }
+        // load the DB Proxy
+		String host = "127.0.0.1";
+		int port = 2639;
+		if (fileName.startsWith("//")) {
+			String[] infos = fileName.substring(2).split("/", 2);
+			if (infos.length == 2) {
+				String[] hostInfos = infos[0].trim().split(":");
+				if (hostInfos.length == 2) {
+					host = hostInfos[0].trim();
+					port = Integer.parseInt(hostInfos[1].trim());
+				}
+				
+				fileName = infos[1].trim();
+			}
+		}
+		try {
+			db = new DBProxy(host, port);
+		} catch (Exception e) {
+			SQLException err = new SQLException("Error opening connection");
+			err.initCause(e);
+			throw err;
+		}
 
         db.open((SQLiteConnection)this, fileName, openModeFlags);
         setBusyTimeout(busyTimeout);
@@ -366,11 +379,11 @@ public abstract class CoreConnection {
     }
 
     /**
-     * @return One of "native" or "unloaded".
+     * @return One of "remote" or "unloaded".
      */
     public String getDriverVersion() {
         // Used to supply DatabaseMetaData.getDriverVersion()
-        return  db != null ? "native" : "unloaded";
+        return  db != null ? "remote" : "unloaded";
     }
 
     /**

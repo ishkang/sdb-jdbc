@@ -239,7 +239,7 @@ public abstract class JDBC3DatabaseMetaData extends sdb.core.CoreDatabaseMetaDat
      * @see java.sql.DatabaseMetaData#getDatabaseProductName()
      */
     public String getDatabaseProductName() {
-        return "SQLite";
+        return "SDB";
     }
 
     /**
@@ -253,7 +253,7 @@ public abstract class JDBC3DatabaseMetaData extends sdb.core.CoreDatabaseMetaDat
      * @see java.sql.DatabaseMetaData#getDriverName()
      */
     public String getDriverName() {
-        return "SQLiteJDBC";
+        return "SDB JDBC";
     }
 
     /**
@@ -1827,12 +1827,12 @@ public abstract class JDBC3DatabaseMetaData extends sdb.core.CoreDatabaseMetaDat
 
     /** Not implemented yet. */
     public Struct createStruct(String t, Object[] attr) throws SQLException {
-        throw new SQLException("Not yet implemented by SQLite JDBC driver");
+        throw new SQLException("Not yet implemented by SDB JDBC driver");
     }
 
     /** Not implemented yet. */
     public ResultSet getFunctionColumns(String a, String b, String c, String d) throws SQLException {
-        throw new SQLException("Not yet implemented by SQLite JDBC driver");
+        throw new SQLException("Not yet implemented by SDB JDBC driver");
     }
 
     // inner classes

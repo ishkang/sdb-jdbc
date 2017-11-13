@@ -394,7 +394,7 @@ public abstract class JDBC3Statement extends CoreStatement {
     }
 
     protected SQLException unused() {
-        return new SQLException("not implemented by SQLite JDBC driver");
+        return new SQLException("not implemented by SDB JDBC driver");
     }
 
 

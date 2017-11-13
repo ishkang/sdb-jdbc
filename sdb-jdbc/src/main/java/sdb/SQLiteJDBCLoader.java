@@ -14,7 +14,7 @@
  *  limitations under the License.
  *--------------------------------------------------------------------------*/
 //--------------------------------------
-// SQLite JDBC Project
+// SDB JDBC Project
 //
 // SQLite.java
 // Since: 2007/05/10
@@ -36,13 +36,13 @@ import java.util.UUID;
 
 /**
  * Set the system properties, sdb.lib.path, sdb.lib.name,
- * appropriately so that the SQLite JDBC driver can find *.dll, *.jnilib and
+ * appropriately so that the SDB JDBC driver can find *.dll, *.jnilib and
  * *.so files, according to the current OS (win, linux, mac).
  * <p/>
  * The library files are automatically extracted from this project's package
  * (JAR).
  * <p/>
- * usage: call {@link #initialize()} before using SQLite JDBC driver.
+ * usage: call {@link #initialize()} before using SDB JDBC driver.
  *
  * @author leo
  */
@@ -61,6 +61,7 @@ public class SQLiteJDBCLoader {
         if(!extracted) {
             cleanup();
         }
+        extracted = true;        
         return extracted;
     }
 
@@ -98,7 +99,7 @@ public class SQLiteJDBCLoader {
     }
 
     /**
-     * @return True if the SQLite JDBC driver is set to pure Java mode; false
+     * @return True if the SDB JDBC driver is set to pure Java mode; false
      * otherwise.
      * @deprecated Pure Java no longer supported
      */
@@ -107,9 +108,9 @@ public class SQLiteJDBCLoader {
     }
 
     /**
-     * Checks if the SQLite JDBC driver is set to pure Java mode.
+     * Checks if the SDB JDBC driver is set to pure Java mode.
      *
-     * @return True if the SQLite JDBC driver is set to pure Java mode; false otherwise.
+     * @return True if the SDB JDBC driver is set to pure Java mode; false otherwise.
      * @deprecated Pure Java nolonger supported
      */
     public static boolean isPureJavaMode() {
@@ -117,11 +118,11 @@ public class SQLiteJDBCLoader {
     }
 
     /**
-     * Checks if the SQLite JDBC driver is set to native mode.
+     * Checks if the SDB JDBC driver is set to remote mode.
      *
-     * @return True if the SQLite JDBC driver is set to native Java mode; false otherwise.
+     * @return True if the SDB JDBC driver is set to remote Java mode; false otherwise.
      */
-    public static boolean isNativeMode() throws Exception {
+    public static boolean isRemoteMode() throws Exception {
         // load the driver
         initialize();
         return extracted;
@@ -295,7 +296,7 @@ public class SQLiteJDBCLoader {
     }
 
     /**
-     * @return The major version of the SQLite JDBC driver.
+     * @return The major version of the SDB JDBC driver.
      */
     public static int getMajorVersion() {
         String[] c = getVersion().split("\\.");
@@ -303,7 +304,7 @@ public class SQLiteJDBCLoader {
     }
 
     /**
-     * @return The minor version of the SQLite JDBC driver.
+     * @return The minor version of the SDB JDBC driver.
      */
     public static int getMinorVersion() {
         String[] c = getVersion().split("\\.");
@@ -311,7 +312,7 @@ public class SQLiteJDBCLoader {
     }
 
     /**
-     * @return The version of the SQLite JDBC driver.
+     * @return The version of the SDB JDBC driver.
      */
     public static String getVersion() {
 

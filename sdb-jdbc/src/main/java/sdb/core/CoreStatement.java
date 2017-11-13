@@ -65,9 +65,9 @@ public abstract class CoreStatement implements Codes
      */
     protected boolean exec() throws SQLException {
         if (sql == null)
-            throw new SQLException("SQLiteJDBC internal error: sql==null");
+            throw new SQLException("SDB JDBC internal error: sql==null");
         if (rs.isOpen())
-            throw new SQLException("SQLite JDBC internal error: rs.isOpen() on exec.");
+            throw new SQLException("SDB JDBC internal error: rs.isOpen() on exec.");
 
         boolean success = false;
         boolean rc = false;
@@ -92,9 +92,9 @@ public abstract class CoreStatement implements Codes
      */
     protected boolean exec(String sql) throws SQLException {
         if (sql == null)
-            throw new SQLException("SQLiteJDBC internal error: sql==null");
+            throw new SQLException("SDB JDBC internal error: sql==null");
         if (rs.isOpen())
-            throw new SQLException("SQLite JDBC internal error: rs.isOpen() on exec.");
+            throw new SQLException("SDB JDBC internal error: rs.isOpen() on exec.");
 
         boolean rc = false;
         boolean success = false;

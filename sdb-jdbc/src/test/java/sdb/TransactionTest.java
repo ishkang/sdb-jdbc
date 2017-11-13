@@ -33,7 +33,7 @@ public class TransactionTest
 
     @BeforeClass
     public static void forName() throws Exception {
-        System.out.println("running in " + (SQLiteJDBCLoader.isNativeMode() ? "native" : "pure-java") + " mode");
+        System.out.println("running in " + (SQLiteJDBCLoader.isRemoteMode() ? "remote" : "pure-java") + " mode");
     }
 
     @Before

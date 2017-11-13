@@ -496,7 +496,7 @@ public abstract class JDBC3PreparedStatement extends CorePreparedStatement {
 
     // UNUSED ///////////////////////////////////////////////////////
     protected SQLException unused() {
-        return new SQLException("not implemented by SQLite JDBC driver");
+        return new SQLException("not implemented by SDB JDBC driver");
     }
 
 

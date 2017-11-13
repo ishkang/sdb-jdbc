@@ -1,0 +1,49 @@
+package sdb.core;
+
+interface RemoteMethodCodes {
+	public static final byte INTERRUPT = 1; // O
+	public static final byte BUSY_TIMEOUT = 2; // O
+	public static final byte ERRMSG = 3; // O
+	public static final byte LIBVERSION = 4;
+	public static final byte CHANGES = 5;
+	public static final byte TOTAL_CHANGES = 6; // O
+	public static final byte SHARED_CACHE = 7;
+	public static final byte ENABLE_LOAD_EXTENSION = 8; // O
+	public static final byte _OPEN = 9; // O
+	public static final byte _CLOSE = 10; // O
+	public static final byte _EXEC = 11; // O
+	public static final byte PREPARE = 12; // O
+	public static final byte FINALIZE = 13; // O
+	public static final byte STEP = 14; // O
+	public static final byte RESET = 15; // O
+	public static final byte CLEAR_BINDINGS = 16;
+	public static final byte BIND_PARAMETER_COUNT = 17;
+	public static final byte COLUMN_COUNT = 18; // O
+	public static final byte COLUMN_TYPE = 19; // O
+	public static final byte COLUMN_DECLTYPE = 20; // O
+	public static final byte COLUMN_TABLE_NAME = 21; // O
+	public static final byte COLUMN_NAME = 22; // O
+	public static final byte COLUMN_TEXT = 23; // O
+	public static final byte COLUMN_BLOB = 24;
+	public static final byte COLUMN_DOUBLE = 25; // O
+	public static final byte COLUMN_LONG = 26; // O
+	public static final byte COLUMN_INT = 27; // O
+	public static final byte BIND_NULL = 28;
+	public static final byte BIND_INT = 29;
+	public static final byte BIND_LONG = 30;
+	public static final byte BIND_DOUBLE = 31;
+	public static final byte BIND_TEXT = 32;
+	public static final byte BIND_BLOB = 33;
+	public static final byte RESULT_NULL = 34;
+	public static final byte RESULT_TEXT = 35;
+	public static final byte RESULT_BLOB = 36;
+	public static final byte RESULT_DOUBLE = 37;
+	public static final byte RESULT_LONG = 38;
+	public static final byte RESULT_INT = 39;
+	public static final byte RESULT_ERROR = 40;
+	public static final byte DESTROY_FUNCTION = 41;
+	public static final byte FREE_FUNCTIONS = 42; // O
+	public static final byte CLEAR_PROGRESS_HANDLER = 43;
+	public static final byte COLUMN_METADATA = 44;
+	public static final byte TEST = 45; // O
+}

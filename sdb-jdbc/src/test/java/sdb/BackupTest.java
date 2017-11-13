@@ -59,7 +59,7 @@ public class BackupTest
     @Test
     public void memoryToDisk() throws Exception {
 
-        if (!SQLiteJDBCLoader.isNativeMode())
+        if (!SQLiteJDBCLoader.isRemoteMode())
             return; // skip this test in pure-java mode
 
         Connection conn = DriverManager.getConnection("jdbc:sdb:");

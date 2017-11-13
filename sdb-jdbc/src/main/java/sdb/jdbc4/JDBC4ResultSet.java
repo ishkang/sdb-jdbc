@@ -330,7 +330,7 @@ public class JDBC4ResultSet extends JDBC3ResultSet implements ResultSet, ResultS
     }
 
     protected SQLException unused() {
-        return new SQLException("not implemented by SQLite JDBC driver");
+        return new SQLException("not implemented by SDB JDBC driver");
     }
 
 
