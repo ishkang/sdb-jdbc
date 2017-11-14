@@ -16,7 +16,7 @@ public class Sample {
 			}
 
 			// create a database connection
-			connection = DriverManager.getConnection("jdbc:sdb://10.10.3.32:2639/test/sample.gdf", "sa", "sdb-admin");			
+			connection = DriverManager.getConnection("jdbc:sdb://10.10.3.32/test/sample.gdf", "sa", "sdb-admin");			
 			//connection = DriverManager.getConnection("jdbc:sdb:test/sample.gdf");
 
 			Statement statement = connection.createStatement();

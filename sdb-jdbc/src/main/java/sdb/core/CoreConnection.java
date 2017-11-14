@@ -212,7 +212,8 @@ public abstract class CoreConnection {
 		if (fileName.startsWith("//")) {
 			String[] infos = fileName.substring(2).split("/", 2);
 			if (infos.length == 2) {
-				String[] hostInfos = infos[0].trim().split(":");
+				host = infos[0].trim();
+				String[] hostInfos = host.split(":");
 				if (hostInfos.length == 2) {
 					host = hostInfos[0].trim();
 					port = Integer.parseInt(hostInfos[1].trim());

@@ -2,8 +2,6 @@ package sdb.core;
 
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
-import java.util.Base64;
-
 import sdb.util.KISA_SHA256;
 
 /**

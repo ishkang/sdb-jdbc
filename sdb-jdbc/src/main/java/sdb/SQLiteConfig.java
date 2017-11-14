@@ -89,7 +89,7 @@ public class SQLiteConfig
         dateMultiplier = (datePrecision == DatePrecision.MILLISECONDS) ? 1L : 1000L;
         dateStringFormat = pragmaTable.getProperty(Pragma.DATE_STRING_FORMAT.pragmaName, DEFAULT_DATE_STRING_FORMAT);
 
-        busyTimeout = Integer.parseInt(pragmaTable.getProperty(Pragma.BUSY_TIMEOUT.pragmaName, "30000"));
+        busyTimeout = Integer.parseInt(pragmaTable.getProperty(Pragma.BUSY_TIMEOUT.pragmaName, "3000"));
     }
 
     /**

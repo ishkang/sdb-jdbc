@@ -42,9 +42,7 @@ final class RemoteDB extends DB {
 		try {
 			socket = new Socket(host, port);
 			outStream = new BufferedOutputStream(socket.getOutputStream());
-			inStream = new BufferedInputStream(socket.getInputStream());
-
-			System.out.println(String.format("connected: {host: %s, port: %d}", host, port));	
+			inStream = new BufferedInputStream(socket.getInputStream());	
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			throw new SQLException(e);
@@ -503,8 +501,8 @@ final class RemoteDB extends DB {
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes._OPEN); // 9
 		packet.addString(filename);
 		packet.addInt(openFlags);
-		packet.addString(userId);
-		packet.addSHA256String(userPassword);
+		packet.addString(userId == null ? "" : userId);
+		packet.addSHA256String(userPassword == null ? "" : userPassword);
 		writeRequest(packet);
 
 		// ¿¿¥‰
@@ -518,6 +516,8 @@ final class RemoteDB extends DB {
 			
 			//System.out.println(String.format("_open(%s, %d): void", filename, openFlags));
 		}
+		
+		System.out.println(String.format("connected: {host: %s, port: %d, user: %s, password: %d}", host, port, userId, userPassword.charAt(0) + 1));
 	}
 
 	@Override
@@ -561,7 +561,7 @@ final class RemoteDB extends DB {
 					outStream.close();
 					inStream.close();
 					socket.close();
-					System.out.println(String.format("disconnected: {host: %s, port: %d}", host, port));
+					System.out.println(String.format("disconnected: {host: %s, port: %d, user: %s}", host, port, userId));
 				} catch (IOException e) {
 					e.printStackTrace();
 					throw new SQLException(e);
