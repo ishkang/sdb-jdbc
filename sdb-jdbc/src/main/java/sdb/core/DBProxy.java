@@ -14,12 +14,12 @@ import sdb.ProgressHandler;
 public final class DBProxy extends DB {
 	final DB db;
 
-	public DBProxy(String host, int port) throws SQLException {
+	public DBProxy(String host, int port, String userId, String userPassword) throws SQLException {
 		if (host.isEmpty() || port == 0) {
 			throw new SQLException("연결할 대상 서버가 지정되지 않았습니다.");
 			// db = new NativeDB();
 		} else {
-			db = new RemoteDB(host, port);
+			db = new RemoteDB(host, port, userId, userPassword);
 		}
 	}
 

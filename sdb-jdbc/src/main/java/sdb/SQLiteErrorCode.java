@@ -24,8 +24,6 @@
 //--------------------------------------
 package sdb;
 
-import java.sql.SQLException;
-
 /**
  * SQLite3 error code
  * 

@@ -24,15 +24,12 @@
 //--------------------------------------
 package sdb;
 
-import sdb.util.OSInfo;
-
 import java.io.*;
 import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
-import java.util.UUID;
 
 /**
  * Set the system properties, sdb.lib.path, sdb.lib.name,
@@ -157,7 +154,7 @@ public class SQLiteJDBCLoader {
         }
     }
 
-    private static boolean contentsEquals(InputStream in1, InputStream in2) throws IOException {
+    /*private static boolean contentsEquals(InputStream in1, InputStream in2) throws IOException {
         if(!(in1 instanceof BufferedInputStream)) {
             in1 = new BufferedInputStream(in1);
         }
@@ -175,7 +172,7 @@ public class SQLiteJDBCLoader {
         }
         int ch2 = in2.read();
         return ch2 == -1;
-    }
+    }*/
 
     /**
      * Extracts and loads the specified library file to the target folder
@@ -185,7 +182,7 @@ public class SQLiteJDBCLoader {
      * @param targetFolder          Target folder.
      * @return
      */
-    private static boolean extractAndLoadLibraryFile(String libFolderForCurrentOS, String libraryFileName,
+    /*private static boolean extractAndLoadLibraryFile(String libFolderForCurrentOS, String libraryFileName,
                                                      String targetFolder) {
         String nativeLibraryFilePath = libFolderForCurrentOS + "/" + libraryFileName;
         // Include architecture name in temporary filename in order to avoid conflicts
@@ -255,7 +252,7 @@ public class SQLiteJDBCLoader {
             return false;
         }
 
-    }
+    }*/
 
     /**
      * Loads native library using the given path and name of the library.
@@ -264,7 +261,7 @@ public class SQLiteJDBCLoader {
      * @param name Name  of the native library.
      * @return True for successfully loading; false otherwise.
      */
-    private static synchronized boolean loadNativeLibrary(String path, String name) {
+    /*private static synchronized boolean loadNativeLibrary(String path, String name) {
         File libPath = new File(path, name);
         if(libPath.exists()) {
 
@@ -282,18 +279,16 @@ public class SQLiteJDBCLoader {
         else {
             return false;
         }
-    }
+    }*/
 
-    private static boolean hasResource(String path) {
+    /*private static boolean hasResource(String path) {
         return SQLiteJDBCLoader.class.getResource(path) != null;
-    }
-
-
-    @SuppressWarnings("unused")
-    private static void getNativeLibraryFolderForTheCurrentOS() {
+    }*/
+    
+    /*private static void getNativeLibraryFolderForTheCurrentOS() {
         String osName = OSInfo.getOSName();
         String archName = OSInfo.getArchName();
-    }
+    }*/
 
     /**
      * @return The major version of the SDB JDBC driver.

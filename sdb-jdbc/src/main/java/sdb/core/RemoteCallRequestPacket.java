@@ -1,9 +1,10 @@
 package sdb.core;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.util.Base64;
+
+import sdb.util.KISA_SHA256;
 
 /**
  * 
@@ -105,6 +106,25 @@ class RemoteCallRequestPacket {
 
 		length = newLength;
 		stream = newStream;
+	}
+
+	public void addSHA256String(String value) throws SQLException {		
+		byte[] plainStream = null;
+		try {
+			plainStream = value.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			throw new SQLException(e);
+		}
+		
+		byte[] encryptedStream = new byte[32]; // 32 ?
+		KISA_SHA256.SHA256_Encrpyt(plainStream, plainStream.length, encryptedStream);
+		
+		StringBuffer hexString = new StringBuffer();
+		for (int i = 0; i < encryptedStream.length; i++) {
+			hexString.append(Integer.toHexString(0xFF & encryptedStream[i]));
+		}
+		addString(hexString.toString());
 	}
 
 	public void addArray(byte[] value) {

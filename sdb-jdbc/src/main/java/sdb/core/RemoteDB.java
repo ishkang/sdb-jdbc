@@ -2,19 +2,11 @@ package sdb.core;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
-
-import sdb.core.DB.ProgressObserver;
 
 import sdb.BusyHandler;
 import sdb.Function;
@@ -28,27 +20,31 @@ import sdb.ProgressHandler;
 final class RemoteDB extends DB {
 	private final String host;
 	private final int port;
+	private final String userId;
+	private final String userPassword;
 
 	private Socket socket;
 	private BufferedOutputStream outStream;
 	private BufferedInputStream inStream;
 
-	public RemoteDB(String host, int port) throws SQLException {
+	public RemoteDB(String host, int port, String userId, String userPassword) throws SQLException {
 		this.host = host;
 		this.port = port;
+		this.userId = userId;
+		this.userPassword = userPassword;
 
 		// socket = connect(host, port);
 		// test_2차프로토타입();
 	}
 
-	private Socket __connect(String host, int port) throws SQLException {
+	private Socket __connect(String host, int port, String userId, String userPassword) throws SQLException {
 		Socket socket = null;
 		try {
 			socket = new Socket(host, port);
 			outStream = new BufferedOutputStream(socket.getOutputStream());
 			inStream = new BufferedInputStream(socket.getInputStream());
 
-			System.out.println(String.format("connected: {host: %s, port: %d}", host, port));
+			System.out.println(String.format("connected: {host: %s, port: %d}", host, port));	
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			throw new SQLException(e);
@@ -501,12 +497,14 @@ final class RemoteDB extends DB {
 	@Override
 	protected synchronized void _open(String filename, int openFlags) throws SQLException {
 		if (socket == null || !socket.isConnected())
-			socket = __connect(host, port);
+			socket = __connect(host, port, userId, userPassword);
 
 		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes._OPEN); // 9
 		packet.addString(filename);
 		packet.addInt(openFlags);
+		packet.addString(userId);
+		packet.addSHA256String(userPassword);
 		writeRequest(packet);
 
 		// 응답

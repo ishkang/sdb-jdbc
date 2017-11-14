@@ -28,7 +28,9 @@ import java.sql.SQLException;
 import sdb.SQLiteErrorCode;
 
 public class SQLiteException extends SQLException {
-    private SQLiteErrorCode resultCode;
+	private static final long serialVersionUID = 4725749615059215070L;
+	
+	private SQLiteErrorCode resultCode;
 
     public SQLiteException(String message, SQLiteErrorCode resultCode) {
         super(message, null, resultCode.code & 0xff);

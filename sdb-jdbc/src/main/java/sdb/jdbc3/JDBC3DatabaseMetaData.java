@@ -1592,7 +1592,7 @@ public abstract class JDBC3DatabaseMetaData extends sdb.core.CoreDatabaseMetaDat
         } else {
             // loop over results from pragma call, getting specific info for each index
 
-            int i = 0;
+            //int i = 0;
             Iterator<ArrayList<Object>> indexIterator = indexList.iterator();
             ArrayList<Object> currentIndex;
 
