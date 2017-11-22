@@ -24,6 +24,16 @@ public final class DBProxy extends DB {
 	}
 
 	@Override
+	public String getClientInfo() {
+		return db.getClientInfo();
+	}
+
+	@Override
+	protected void setClientInfo(String clientInfo) throws SQLException {
+		db.setClientInfo(clientInfo);
+	}
+	
+	@Override
 	public void interrupt() throws SQLException {
 		// System.out.println("@interrupt");
 		db.interrupt();
@@ -104,126 +114,210 @@ public final class DBProxy extends DB {
 	@Override
 	protected int finalize(long stmt) throws SQLException {
 		// System.out.println("@finalize");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.finalize(stmt);
 	}
 
 	@Override
 	public int step(long stmt) throws SQLException {
 		// System.out.println("@step");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.step(stmt);
 	}
 
 	@Override
 	public int reset(long stmt) throws SQLException {
 		// System.out.println("@reset");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.reset(stmt);
 	}
 
 	@Override
 	public int clear_bindings(long stmt) throws SQLException {
 		// System.out.println("@clear_bindings");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.clear_bindings(stmt);
 	}
 
 	@Override
 	int bind_parameter_count(long stmt) throws SQLException {
 		// System.out.println("@bind_parameter_count");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.bind_parameter_count(stmt);
 	}
 
 	@Override
 	public int column_count(long stmt) throws SQLException {
 		// System.out.println("@column_count");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_count(stmt);
 	}
 
 	@Override
 	public int column_type(long stmt, int col) throws SQLException {
 		// System.out.println("@column_type");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_type(stmt, col);
 	}
 
 	@Override
 	public String column_decltype(long stmt, int col) throws SQLException {
 		// System.out.println("@column_decltype");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_decltype(stmt, col);
 	}
 
 	@Override
 	public String column_table_name(long stmt, int col) throws SQLException {
 		// System.out.println("@column_table_name");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_table_name(stmt, col);
 	}
 
 	@Override
 	public String column_name(long stmt, int col) throws SQLException {
 		// System.out.println("@column_name");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_name(stmt, col);
 	}
 
 	@Override
 	public String column_text(long stmt, int col) throws SQLException {
 		// System.out.println("@column_text");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_text(stmt, col);
 	}
 
 	@Override
 	public byte[] column_blob(long stmt, int col) throws SQLException {
 		// System.out.println("@column_blob");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_blob(stmt, col);
 	}
 
 	@Override
 	public double column_double(long stmt, int col) throws SQLException {
 		// System.out.println("@column_double");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_double(stmt, col);
 	}
 
 	@Override
 	public long column_long(long stmt, int col) throws SQLException {
 		// System.out.println("@column_long");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_long(stmt, col);
 	}
 
 	@Override
 	public int column_int(long stmt, int col) throws SQLException {
 		// System.out.println("@column_int");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_int(stmt, col);
 	}
 
 	@Override
 	int bind_null(long stmt, int pos) throws SQLException {
 		// System.out.println("@bind_null");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.bind_null(stmt, pos);
 	}
 
 	@Override
 	int bind_int(long stmt, int pos, int v) throws SQLException {
 		// System.out.println("@bind_int");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.bind_int(stmt, pos, v);
 	}
 
 	@Override
 	int bind_long(long stmt, int pos, long v) throws SQLException {
 		// System.out.println("@bind_long");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.bind_long(stmt, pos, v);
 	}
 
 	@Override
 	int bind_double(long stmt, int pos, double v) throws SQLException {
 		// System.out.println("@bind_double");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.bind_double(stmt, pos, v);
 	}
 
 	@Override
 	int bind_text(long stmt, int pos, String v) throws SQLException {
 		// System.out.println("@bind_text");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.bind_text(stmt, pos, v);
 	}
 
 	@Override
 	int bind_blob(long stmt, int pos, byte[] v) throws SQLException {
 		// System.out.println("@bind_blob");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.bind_blob(stmt, pos, v);
 	}
 
@@ -350,7 +444,10 @@ public final class DBProxy extends DB {
 	@Override
 	boolean[][] column_metadata(long stmt) throws SQLException {
 		// System.out.println("@column_metadata");
+
+		if (stmt == 0)
+			throw new SQLException("The prepared statement has been finalized");
+		
 		return db.column_metadata(stmt);
 	}
-
 }

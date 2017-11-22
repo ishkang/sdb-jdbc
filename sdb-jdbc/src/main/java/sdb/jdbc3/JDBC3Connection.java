@@ -160,6 +160,10 @@ public abstract class JDBC3Connection extends CoreConnection {
         checkOpen();
         if (autoCommit == ac)
             return;
+		/*if (ac) {
+			System.out.println("AutoCommit 값은 true일 수 없습니다.");
+			throw new SQLException("AutoCommit 값은 true일 수 없습니다.");
+		}*/
         autoCommit = ac;
         db.exec(autoCommit ? "commit;" : beginCommandMap.get(transactionMode));
     }

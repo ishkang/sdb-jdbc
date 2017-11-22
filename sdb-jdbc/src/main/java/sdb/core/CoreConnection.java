@@ -295,6 +295,14 @@ public abstract class CoreConnection {
 
     }
 
+    public String getClientInfo2() {
+    	return db.getClientInfo();
+    }
+    
+    protected void setClientInfo2(String clientInfo) throws SQLException {
+    	db.setClientInfo(clientInfo);
+    }
+    
     /**
      * @return The busy timeout value for the connection.
      * @see <a href="http://www.sqlite.org/c3ref/busy_timeout.html">http://www.sqlite.org/c3ref/busy_timeout.html</a>
@@ -384,7 +392,7 @@ public abstract class CoreConnection {
      */
     public String getDriverVersion() {
         // Used to supply DatabaseMetaData.getDriverVersion()
-        return  db != null ? "remote" : "unloaded";
+        return  db != null ? "1.0.4" : "unloaded";
     }
 
     /**

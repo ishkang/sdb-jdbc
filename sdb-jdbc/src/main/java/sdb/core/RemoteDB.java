@@ -7,7 +7,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
-
 import sdb.BusyHandler;
 import sdb.Function;
 import sdb.ProgressHandler;
@@ -22,10 +21,11 @@ final class RemoteDB extends DB {
 	private final int port;
 	private final String userId;
 	private final String userPassword;
-
+	
 	private Socket socket;
 	private BufferedOutputStream outStream;
 	private BufferedInputStream inStream;
+	private String clientInfo;
 
 	public RemoteDB(String host, int port, String userId, String userPassword) throws SQLException {
 		this.host = host;
@@ -37,7 +37,10 @@ final class RemoteDB extends DB {
 		// test_2차프로토타입();
 	}
 
-	private Socket __connect(String host, int port, String userId, String userPassword) throws SQLException {
+	private Socket __connect(String host, int port) throws SQLException {
+		if(socket != null)
+			throw new SQLException("이미 연결되어 있습니다.");
+		
 		Socket socket = null;
 		try {
 			socket = new Socket(host, port);
@@ -64,7 +67,7 @@ final class RemoteDB extends DB {
 		}
 	}
 
-	private byte[] readResponse() throws SQLException {
+	private int readResponseDatasLength() throws SQLException {
 		// 응답
 		byte[] response = null;
 
@@ -155,9 +158,10 @@ final class RemoteDB extends DB {
 		}
 
 		// 응답 바디
+		int datasLength;
 		{
-			// length: 4 bytes
-			int datasLength = 0;
+			// packet length: 4 bytes
+			datasLength = 0;
 			{
 				int packetLength = 4;
 				response = new byte[packetLength];
@@ -173,13 +177,25 @@ final class RemoteDB extends DB {
 					throw new SQLException("응답바디크기 읽기 실패");
 
 				datasLength = NetworkStreamHelper.toInt(response, 0);
-				if (datasLength == 0)
-					throw new SQLException("응답바디 크기 이상");
+				if (datasLength <= 0)
+					throw new SQLException("응답바디크기 이상");
 
 				response = null;
 			}
+		}
 
-			//
+		return datasLength;
+	}
+
+	private byte[] readResponse() throws SQLException {
+		byte[] response = null;
+
+		// 응답 바디
+		{
+			// 바디 길이
+			int datasLength = readResponseDatasLength();
+
+			// 바디 내용
 			{
 				response = new byte[datasLength];
 
@@ -244,11 +260,49 @@ final class RemoteDB extends DB {
 					offset++; // NUL (1)
 				}
 			}
-		}
 
-		//System.out.println(String.format("test_2차프로토타입(): %s", returnValue));
+			//System.out.println(String.format("test_2차프로토타입(): %s", returnValue));
+		}
 	}
 
+	@Override
+	public String getClientInfo() {
+		return clientInfo;
+	}
+
+	private void applyClientInfo(String clientInfo) throws SQLException {		
+		if (clientInfo == null)
+			return;
+
+		if (socket == null || !socket.isConnected())
+			throw new SQLException("연결되어 있지 않습니다.");		
+		
+		// 요청
+		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.CLIENT_INFO); // 46
+		packet.addString(clientInfo);
+		writeRequest(packet);
+
+		// 응답
+		byte[] response = readResponse();
+
+		// 처리
+		{
+			// void: 2 bytes
+			if (response.length != 2)
+				throw new SQLException("리턴값 이상");
+			
+			//System.out.println("applyClientInfo(%s): void", clientInfo);
+		}
+	}
+	
+	@Override
+	protected void setClientInfo(String clientInfo) throws SQLException {
+		this.clientInfo = clientInfo;
+		
+		if (socket != null && socket.isConnected())
+			applyClientInfo(clientInfo);
+	}
+	
 	@Override
 	public synchronized void interrupt() throws SQLException {
 		if (socket == null || !socket.isConnected())
@@ -338,9 +392,9 @@ final class RemoteDB extends DB {
 					offset++; // NUL (1)
 				}
 			}
-		}
 
-		//System.out.println(String.format("errmsg(): %s", returnValue));
+			//System.out.println(String.format("errmsg(): %s", returnValue));
+		}
 		return returnValue;
 	}
 
@@ -380,9 +434,9 @@ final class RemoteDB extends DB {
 					offset++; // NUL (1)
 				}
 			}
-		}
 
-		//System.out.println(String.format("errmsg(): %s", returnValue));
+			//System.out.println(String.format("libversion(): %s", returnValue));
+		}
 		return returnValue;
 	}
 
@@ -406,9 +460,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("total_changes(): %d", returnValue));
+			//System.out.println(String.format("changes(): %d", returnValue));
+		}
 		return returnValue;
 	}
 
@@ -432,9 +486,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("total_changes(): %d", returnValue));
+			//System.out.println(String.format("total_changes(): %d", returnValue));
+		}
 		return returnValue;
 	}
 
@@ -459,9 +513,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("enable_load_extension(%s): %d", enable, returnValue));
+			//System.out.println(String.format("shared_cache(%s): %d", enable, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -486,23 +540,26 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("enable_load_extension(%s): %d", enable, returnValue));
+			//System.out.println(String.format("enable_load_extension(%s): %d", enable, returnValue));
+		}
 		return returnValue;
 	}
 
 	@Override
 	protected synchronized void _open(String filename, int openFlags) throws SQLException {
 		if (socket == null || !socket.isConnected())
-			socket = __connect(host, port, userId, userPassword);
+			socket = __connect(host, port);
 
+		applyClientInfo(clientInfo);
+		
 		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes._OPEN); // 9
 		packet.addString(filename);
 		packet.addInt(openFlags);
 		packet.addString(userId == null ? "" : userId);
 		packet.addSHA256String(userPassword == null ? "" : userPassword);
+		packet.addString(clientInfo == null ? "" : clientInfo);
 		writeRequest(packet);
 
 		// 응답
@@ -594,9 +651,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("_exec(%s): %d", sql, returnValue));
+			//System.out.println(String.format("_exec(%s): %d", sql, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -621,9 +678,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toLong(response, 0); // long (8)
-		}
 
-		//System.out.println(String.format("prepare(%s): %d", sql, returnValue));
+			//System.out.println(String.format("prepare(%s): %d", sql, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -648,9 +705,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("finalize(%d): %d", stmt, returnValue));
+			//System.out.println(String.format("finalize(%d): %d", stmt, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -675,9 +732,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("step(%d): %d", stmt, returnValue));
+			//System.out.println(String.format("step(%d): %d", stmt, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -702,9 +759,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("reset(%d): %d", stmt, returnValue));
+			//System.out.println(String.format("reset(%d): %d", stmt, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -729,9 +786,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_count(%d): %d", stmt, returnValue));
+			//System.out.println(String.format("clear_bindings(%d): %d", stmt, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -756,9 +813,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_count(%d): %d", stmt, returnValue));
+			//System.out.println(String.format("bind_parameter_count(%d): %d", stmt, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -783,9 +840,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_count(%d): %d", stmt, returnValue));
+			//System.out.println(String.format("column_count(%d): %d", stmt, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -811,9 +868,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_type(%d, %d): %d", stmt, col, returnValue));
+			//System.out.println(String.format("column_type(%d, %d): %d", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -855,9 +912,9 @@ final class RemoteDB extends DB {
 					offset++; // NUL (1)
 				}
 			}
-		}
 
-		//System.out.println(String.format("column_decltype(%d, %d): %s", stmt, col, returnValue));
+			//System.out.println(String.format("column_decltype(%d, %d): %s", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -899,9 +956,9 @@ final class RemoteDB extends DB {
 					offset++; // NUL (1)
 				}
 			}
-		}
 
-		//System.out.println(String.format("column_table_name(%d, %d): %s", stmt, col, returnValue));
+			//System.out.println(String.format("column_table_name(%d, %d): %s", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -943,9 +1000,9 @@ final class RemoteDB extends DB {
 					offset++; // NUL (1)
 				}
 			}
-		}
 
-		//System.out.println(String.format("column_name(%d, %d): %s", stmt, col, returnValue));
+			//System.out.println(String.format("column_name(%d, %d): %s", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -987,9 +1044,9 @@ final class RemoteDB extends DB {
 					offset++; // NUL (1)
 				}
 			}
-		}
 
-		//System.out.println(String.format("column_text(%d, %d): %s", stmt, col, returnValue));
+			//System.out.println(String.format("column_text(%d, %d): %s", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -998,8 +1055,74 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
-		throw new SQLException("구현되지 않았습니다.: column_blob");
-		//return null;
+		// 요청
+		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.COLUMN_BLOB); // 24
+		packet.addLong(stmt);
+		packet.addInt(col);
+		writeRequest(packet);
+
+		// 응답 & 처리
+		int arrayColumnCount;
+		byte[] array;
+		{
+			// 응답 바디
+			{
+				// 바디 길이
+				int datasLength = readResponseDatasLength();		
+
+				// Array: 4 + (array column count) bytes
+				if (datasLength < 4) // 4
+					throw new SQLException("리턴값 이상");
+				
+				// 배열 길이
+				// packet length: 4 bytes
+				arrayColumnCount = 0;
+				{
+					int packetLength = 4;
+					byte[] response = new byte[packetLength];
+
+					int bytesRec = 0;
+					try {
+						bytesRec = inStream.read(response, 0, packetLength);
+					} catch (IOException e) {
+						e.printStackTrace();
+						throw new SQLException(e);
+					}
+					if (bytesRec != packetLength)
+						throw new SQLException("배열크기 읽기 실패");
+
+					arrayColumnCount = NetworkStreamHelper.toInt(response, 0);
+
+					response = null;
+				}
+				
+				// 배열 내용
+				if (arrayColumnCount > 0)
+				{
+					array = new byte[arrayColumnCount];
+		
+					int bytesRec = 0;
+					try {
+						bytesRec = inStream.read(array, 0, arrayColumnCount);
+					} catch (IOException e) {
+						e.printStackTrace();
+						throw new SQLException(e);
+					}
+					if (bytesRec != arrayColumnCount)
+						throw new SQLException("배열 읽기 실패");
+				}
+				else {
+					array = null;
+				}
+					
+			}
+		}		
+		
+		// 처리
+		byte[] returnValue = array;			
+		
+		//System.out.println("column_blob(%d, %d): array", stmt, col);
+		return returnValue;
 	}
 
 	@Override
@@ -1007,9 +1130,7 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
-		throw new SQLException("구현되지 않았습니다.: column_double");
-		
-		/*// 요청
+		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.COLUMN_DOUBLE); // 25
 		packet.addLong(stmt);
 		packet.addInt(col);
@@ -1026,10 +1147,10 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toDouble(response, 0); // double (8)
-		}
 
-		//System.out.println(String.format("column_double(%d, %d): %f", stmt, col, returnValue));
-		return returnValue;*/
+			//System.out.println(String.format("column_double(%d, %d): %f", stmt, col, returnValue));
+		}
+		return returnValue;
 	}
 
 	@Override
@@ -1054,9 +1175,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toLong(response, 0); // long (8)
-		}
 
-		//System.out.println(String.format("column_long(%d, %d): %d", stmt, col, returnValue));
+			//System.out.println(String.format("column_long(%d, %d): %d", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -1082,9 +1203,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_int(%d, %d): %d", stmt, col, returnValue));
+			//System.out.println(String.format("column_int(%d, %d): %d", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -1110,9 +1231,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_int(%d, %d): %d", stmt, col, returnValue));
+			//System.out.println(String.format("bind_null(%d, %d): %d", stmt, col, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -1139,9 +1260,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_int(%d, %d): %d", stmt, col, returnValue));
+			//System.out.println(String.format("bind_int(%d, %d, %d): %d", stmt, pos, v, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -1168,9 +1289,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_int(%d, %d): %d", stmt, col, returnValue));
+			//System.out.println(String.format("bind_long(%d, %d, %d): %d", stmt, pos, v, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -1179,8 +1300,28 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
-		throw new SQLException("구현되지 않았습니다.: bind_double");
-		//return 0;
+		// 요청
+		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.BIND_DOUBLE); // 31
+		packet.addLong(stmt);
+		packet.addInt(pos);
+		packet.addDouble(v);
+		writeRequest(packet);
+
+		// 응답
+		byte[] response = readResponse();
+
+		// 처리
+		int returnValue = 0;
+		{
+			// int: 4 bytes
+			if (response.length != 4)
+				throw new SQLException("리턴값 이상");
+
+			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
+
+			//System.out.println(String.format("bind_double(%d, %d, %f): %d", stmt, pos, v, returnValue));
+		}
+		return returnValue;
 	}
 
 	@Override
@@ -1206,9 +1347,9 @@ final class RemoteDB extends DB {
 				throw new SQLException("리턴값 이상");
 
 			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
-		}
 
-		//System.out.println(String.format("column_int(%d, %d): %d", stmt, col, returnValue));
+			//System.out.println(String.format("bind_text(%d, %d, %s): %d", stmt, pos, v, returnValue));
+		}
 		return returnValue;
 	}
 
@@ -1217,8 +1358,28 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
-		throw new SQLException("구현되지 않았습니다.: bind_blob");
-		//return 0;
+		// 요청
+		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.BIND_BLOB); // 33
+		packet.addLong(stmt);
+		packet.addInt(pos);
+		packet.addArray(v);
+		writeRequest(packet);
+
+		// 응답
+		byte[] response = readResponse();
+
+		// 처리
+		int returnValue = 0;
+		{
+			// int: 4 bytes
+			if (response.length != 4)
+				throw new SQLException("리턴값 이상");
+
+			returnValue = NetworkStreamHelper.toInt(response, 0); // int (4)
+
+			//System.out.println(String.format("bind_blob(%s, %d, array): %d", stmt, pos, returnValue));
+		}
+		return returnValue;
 	}
 
 	@Override
@@ -1226,6 +1387,9 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
+		if (context == 0)
+			return;	
+		
 		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.RESULT_NULL); // 34
 		packet.addLong(context);
@@ -1240,7 +1404,7 @@ final class RemoteDB extends DB {
 			if (response.length != 2)
 				throw new SQLException("리턴값 이상");
 			
-			//System.out.println("free_functions(): void");
+			//System.out.println("result_null(%d): void", context);
 		}
 	}
 
@@ -1248,6 +1412,9 @@ final class RemoteDB extends DB {
 	public synchronized void result_text(long context, String val) throws SQLException {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
+
+		if (context == 0)
+			return;	
 
 		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.RESULT_TEXT); // 35
@@ -1264,7 +1431,7 @@ final class RemoteDB extends DB {
 			if (response.length != 2)
 				throw new SQLException("리턴값 이상");
 			
-			//System.out.println("free_functions(): void");
+			//System.out.println("result_text(%d, %s): void", context, val);
 		}
 	}
 
@@ -1273,7 +1440,26 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
-		throw new SQLException("구현되지 않았습니다.: result_blob");
+		if (context == 0)
+			return;	
+
+		// 요청
+		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.RESULT_BLOB); // 36
+		packet.addLong(context);
+		packet.addArray(val);
+		writeRequest(packet);
+
+		// 응답
+		byte[] response = readResponse();
+
+		// 처리
+		{
+			// void: 2 bytes
+			if (response.length != 2)
+				throw new SQLException("리턴값 이상");
+			
+			//System.out.println("result_blob(%d, array): void", context);
+		}
 	}
 
 	@Override
@@ -1281,13 +1467,35 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
-		throw new SQLException("구현되지 않았습니다.: result_double");
+		if (context == 0)
+			return;
+
+		// 요청
+		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.RESULT_DOUBLE); // 37
+		packet.addLong(context);
+		packet.addDouble(val);
+		writeRequest(packet);
+
+		// 응답
+		byte[] response = readResponse();
+
+		// 처리
+		{
+			// void: 2 bytes
+			if (response.length != 2)
+				throw new SQLException("리턴값 이상");
+			
+			//System.out.println("result_double(%d, %f): void", context, val);
+		}
 	}
 
 	@Override
 	public synchronized void result_long(long context, long val) throws SQLException {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
+
+		if (context == 0)
+			return;	
 
 		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.RESULT_LONG); // 38
@@ -1304,7 +1512,7 @@ final class RemoteDB extends DB {
 			if (response.length != 2)
 				throw new SQLException("리턴값 이상");
 			
-			//System.out.println("free_functions(): void");
+			//System.out.println("result_long(%d, %d): void", context, val);
 		}
 	}
 
@@ -1312,6 +1520,9 @@ final class RemoteDB extends DB {
 	public synchronized void result_int(long context, int val) throws SQLException {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
+
+		if (context == 0)
+			return;	
 
 		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.RESULT_INT); // 39
@@ -1328,7 +1539,7 @@ final class RemoteDB extends DB {
 			if (response.length != 2)
 				throw new SQLException("리턴값 이상");
 			
-			//System.out.println("free_functions(): void");
+			//System.out.println("result_int(%d, %d): void", context, val);
 		}
 	}
 
@@ -1336,6 +1547,9 @@ final class RemoteDB extends DB {
 	public synchronized void result_error(long context, String err) throws SQLException {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
+
+		if (context == 0)
+			return;	
 
 		// 요청
 		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.RESULT_ERROR); // 40
@@ -1352,7 +1566,7 @@ final class RemoteDB extends DB {
 			if (response.length != 2)
 				throw new SQLException("리턴값 이상");
 			
-			//System.out.println("free_functions(): void");
+			//System.out.println("result_error(%d, %s): void", context, err);
 		}
 	}
 
@@ -1488,8 +1702,52 @@ final class RemoteDB extends DB {
 		if (socket == null || !socket.isConnected())
 			throw new SQLException("연결되어 있지 않습니다.");
 
-		throw new SQLException("구현되지 않았습니다.: column_metadata");
-		//return null;
+		// 요청
+		RemoteCallRequestPacket packet = new RemoteCallRequestPacket(RemoteMethodCodes.COLUMN_METADATA); // 44
+		packet.addLong(stmt);
+		writeRequest(packet);
+
+		// 응답
+		byte[] response = readResponse();
+
+		// 처리
+		boolean[][] returnValue;
+		{
+			int offset = 0;
+			
+			// Array: 4 + 4 + (array row count * array column count) bytes
+			{
+				if (response.length < 8) // 4 + 4
+					throw new SQLException("리턴값 이상");
+
+				int arrayRowCount = NetworkStreamHelper.toInt(response, offset); // int (4)
+				offset += 4;
+
+				int arrayColumnCount = NetworkStreamHelper.toInt(response, offset); // int (4)
+				offset += 4;
+				
+				if (arrayRowCount * arrayColumnCount == 0) {
+					if (arrayRowCount != arrayColumnCount)
+						throw new SQLException("리턴값 이상");
+					
+					returnValue = null;
+				}
+				else {
+					returnValue = new boolean[arrayRowCount][];
+
+					for (int row = 0; row < arrayRowCount; row++) {
+						returnValue[row] = new boolean[arrayColumnCount];
+						for (int col = 0; col < arrayColumnCount; col++) {
+							returnValue[row][col] = response[offset] == 1;
+							offset++;
+						}
+					}
+				}
+			}
+			
+			//System.out.println("column_metadata(%d): array", stmt);
+		}
+		return returnValue;
 	}
 
 	/**

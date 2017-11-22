@@ -1869,68 +1869,71 @@ public abstract class JDBC3DatabaseMetaData extends sdb.core.CoreDatabaseMetaDat
          * @param table The table for which to get find a primary key.
          * @throws SQLException
          */
-		public PrimaryKeyFinder(String table) throws SQLException {
-			this.table = table;
+        public PrimaryKeyFinder(String table) throws SQLException {
+            this.table = table;
 
-			if (table == null || table.trim().length() == 0) {
-				throw new SQLException("Invalid table name: '" + this.table + "'");
-			}
+            if (table == null || table.trim().length() == 0) {
+                throw new SQLException("Invalid table name: '" + this.table + "'");
+            }
 
-			Statement stat = null;
-			ResultSet rs = null;
+            Statement stat = null;
+            ResultSet rs = null;
 
-			try {
-				stat = conn.createStatement();
-				// read create SQL script for table
-				rs = stat.executeQuery("select sql from sqlite_master where" + " lower(name) = lower('" + escape(table) + "') and type in ('table', 'view')");
+            try {
+                stat = conn.createStatement();
+                // read create SQL script for table
+                rs = stat.executeQuery("select sql from sqlite_master where" +
+                    " lower(name) = lower('" + escape(table) + "') and type in ('table', 'view')");
 
-				if (!rs.next())
-					throw new SQLException("Table not found: '" + table + "'");
+                if (!rs.next())
+                    throw new SQLException("Table not found: '" + table + "'");
 
-				Matcher matcher = PK_NAMED_PATTERN.matcher(rs.getString(1));
-				if (matcher.find()) {
-					pkName = escape(matcher.group(1));
-					if (pkName.length() > 2 && pkName.startsWith("`") && pkName.endsWith("`")) {
-						pkName = pkName.substring(1, pkName.length() - 1);
-					}
-					pkColumns = matcher.group(2).split(",");
-				} else {
-					matcher = PK_UNNAMED_PATTERN.matcher(rs.getString(1));
-					if (matcher.find()) {
-						pkColumns = matcher.group(1).split(",");
-					}
-				}
+                Matcher matcher = PK_NAMED_PATTERN.matcher(rs.getString(1));
+                if (matcher.find()){
+                    pkName = escape(matcher.group(1));
+                    if (pkName.length() > 2 && pkName.startsWith("`") && pkName.endsWith("`")) {
+                    	pkName = pkName.substring(1, pkName.length() - 1);
+                    }
+                    pkColumns = matcher.group(2).split(",");
+                }
+                else {
+                    matcher = PK_UNNAMED_PATTERN.matcher(rs.getString(1));
+                    if (matcher.find()){
+                        pkColumns = matcher.group(1).split(",");
+                    }
+                }
 
-				if (pkColumns == null) {
-					rs = stat.executeQuery("pragma table_info('" + escape(table) + "');");
-					while (rs.next()) {
-						if (rs.getBoolean(6))
-							pkColumns = new String[] { rs.getString(2) };
-					}
-				}
+                if (pkColumns == null) {
+                    rs = stat.executeQuery("pragma table_info('" + escape(table) + "');");
+                    while(rs.next()) {
+                        if (rs.getBoolean(6))
+                            pkColumns = new String[]{rs.getString(2)};
+                    }
+                }
 
-				if (pkColumns != null) {
-					for (int i = 0; i < pkColumns.length; i++) {
-						pkColumns[i] = pkColumns[i].trim();
-						if (pkColumns[i].length() > 2 && pkColumns[i].startsWith("`") && pkColumns[i].endsWith("`")) {
-							// unquote to be consistent with column names returned by getColumns()
-							pkColumns[i] = pkColumns[i].substring(1, pkColumns[i].length() - 1);
-						}
-					}
-				}
-			} finally {
-				try {
-					if (rs != null)
-						rs.close();
-				} catch (Exception e) {
-				}
-				try {
-					if (stat != null)
-						stat.close();
-				} catch (Exception e) {
-				}
-			}
-		}
+                if (pkColumns != null) {
+                    for (int i = 0; i < pkColumns.length; i++) {
+                        pkColumns[i] = pkColumns[i].trim();
+                        if (pkColumns[i].length() > 2 && pkColumns[i].startsWith("`") && pkColumns[i].endsWith("`")) {
+                        	// unquote to be consistent with column names returned by getColumns()
+                        	pkColumns[i] = pkColumns[i].substring(1, pkColumns[i].length() - 1);
+                        }
+                    }
+                }
+            }
+            finally {
+            	if (rs != null) {
+	                try {
+	                    rs.close();
+	                } catch (Exception e) {}
+            	}
+            	if (stat != null) {
+	                try {
+	                    stat.close();
+	                } catch (Exception e) {}
+            	}
+            }
+        }
 
         /**
          * @return The primary key name if any.

@@ -498,4 +498,16 @@ public final class NativeDB extends DB
     public native synchronized void register_progress_handler(int vmCalls, ProgressHandler progressHandler) throws SQLException;
 
     public native synchronized void clear_progress_handler() throws SQLException;
+
+	@Override
+	public String getClientInfo() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void setClientInfo(String clientInfo) {
+		// TODO Auto-generated method stub
+		
+	}
 }

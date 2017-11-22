@@ -52,6 +52,9 @@ public abstract class DB implements Codes
     /** Tracer for statements to avoid unfinalized statements on db close. */
     private final Map<Long, CoreStatement> stmts  = new HashMap<Long, CoreStatement>();
 
+    public abstract String getClientInfo();
+    protected abstract void setClientInfo(String clientInfo) throws SQLException; 
+    
     // WRAPPER FUNCTIONS ////////////////////////////////////////////
 
     /**
